@@ -1,5 +1,6 @@
 import csv
 import sys
+import time
 
 from util import Node, StackFrontier, QueueFrontier
 
@@ -59,18 +60,19 @@ def main():
 
     # Load data from files into memory
     print("Loading data...")
+    print(time.perf_counter())
     load_data(directory)
     print("Data loaded.")
-
+    print(time.perf_counter())
     source = person_id_for_name(input("Name: "))
     if source is None:
         sys.exit("Person not found.")
     target = person_id_for_name(input("Name: "))
     if target is None:
         sys.exit("Person not found.")
-
+    print(time.perf_counter())
     path = shortest_path(source, target)
-    
+    print(time.perf_counter())
     if path is None:
         print("Not connected.")
     else:
@@ -99,8 +101,8 @@ def BFS(source,target):
         
 
         currnode =  queue.remove()
-        if currnode.state == target:
-            return currnode
+        #if currnode.state == target:
+        #    return currnode
             #print("found target in enqueueign")
         for neighbour in neighbors_for_person(currnode.state):
             if neighbour not in discovered:
