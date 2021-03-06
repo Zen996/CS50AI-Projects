@@ -78,6 +78,7 @@ def main():
             for two_genes in powerset(names - one_gene):
 
                 # Update probabilities with new joint probability
+                #print(one_gene, two_genes, have_trait, "finding")
                 p = joint_probability(people, one_gene, two_genes, have_trait)
                 update(probabilities, one_gene, two_genes, have_trait, p)
 
@@ -141,17 +142,119 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     """
     #nogenes = people - one_gene -two_genes
     #notraits = people - have_traits
+    jp = 1
+    for person in people:
+        #print(person in one_gene)
+        if person in one_gene:
+            n=1
+            if people[person]['mother'] is None: #if no parents
+                if person in have_trait:
+                    p = PROBS["gene"][n]*PROBS["trait"][n][True]
+                    #print(PROBS["gene"][n],PROBS["trait"][n][True],"no paretns probs")
+                else:
+                    p = PROBS["gene"][n]*PROBS["trait"][n][False]
 
-    for person in one_gene:
-        print(people)
+            else: #if parents
+                if people[person]['mother'] in one_gene:
+                    pma= 0.5
+                elif people[person]['mother'] in two_genes:
+                    pma = 1-PROBS["mutation"]
+                else:
+                    pma =PROBS["mutation"]
+                
+                if people[person]['father'] in one_gene:
+                    pfa = 0.5
+                elif people[person]['father'] in two_genes:
+                    pfa = 1-PROBS["mutation"]
+                else:
+                    pfa = PROBS["mutation"]
+                
+                p = pfa*(1-pma) + (1-pfa)*pma
+                #print(p,"parents probs")
 
-    for person in two_genes:
-        print(people)
+                if person in have_trait:
+                    p = p*PROBS["trait"][n][True]
+                    #print(PROBS["trait"][n][True],"probs w parents")
+                else:
+                    p = p*PROBS["trait"][n][False]
+                
+            jp = jp*p
+            #print(jp,"jp one gene")
+        elif person in two_genes:
+            n=2
+            if people[person]['mother'] is None: #if no parents
+                if person in have_trait:
+                    p = PROBS["gene"][n]*PROBS["trait"][n][True]
+                    #print(PROBS["gene"][n],PROBS["trait"][n][True],"no paretns probs,2genes")
+                else:
+                    p = PROBS["gene"][n]*PROBS["trait"][n][False]
 
-    return 0
+            else: #if parents
+                if people[person]['mother'] in one_gene:
+                    pma= 0.5
+                elif people[person]['mother'] in two_genes:
+                    pma = 1-PROBS["mutation"]
+                else:
+                    pma =PROBS["mutation"]
+                
+                if people[person]['father'] in one_gene:
+                    pfa = 0.5
+                elif people[person]['father'] in two_genes:
+                    pfa = 1-PROBS["mutation"]
+                else:
+                    pfa = PROBS["mutation"]
+                
+                p = pfa*pma
+                #print(p,"parents probs,2")
 
+                if person in have_trait:
+                    p = p*PROBS["trait"][n][True]
+                    #print(PROBS["trait"][n][True],"probs w parents,2")
+                else:
+                    p = p*PROBS["trait"][n][False]
+                
+            jp = jp*p
+            #print(jp,"jp two gene")
+                
+        else:
+            n=0
+            if people[person]['mother'] is None: #if no parents
+                if person in have_trait:
+                    p = PROBS["gene"][n]*PROBS["trait"][n][True]
+                    #print(PROBS["gene"][n],PROBS["trait"][n][True],"no paretns probs,0genes")
+                else:
+                    p = PROBS["gene"][n]*PROBS["trait"][n][False]
+
+            else: #if parents
+                if people[person]['mother'] in one_gene:
+                    pma= 0.5
+                elif people[person]['mother'] in two_genes:
+                    pma = 1-PROBS["mutation"]
+                else:
+                    pma =PROBS["mutation"]
+                
+                if people[person]['father'] in one_gene:
+                    pfa = 0.5
+                elif people[person]['father'] in two_genes:
+                    pfa = 1-PROBS["mutation"]
+                else:
+                    pfa = PROBS["mutation"]
+                
+                p = (1-pfa)*(1-pma)
+                #print(p,"parents probs,0")
+
+                if person in have_trait:
+                    p = p*PROBS["trait"][n][True]
+                    #print(PROBS["trait"][n][True],"probs w parents,0")
+                else:
+                    p = p*PROBS["trait"][n][False]
+                
+            jp = jp*p
+            #print(jp,"jp 0 gene")
+
+    #print(jp)
+    return jp
     raise NotImplementedError
-
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
     """
@@ -160,6 +263,19 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
+    for person in probabilities:
+        if person in one_gene:
+            n=1
+
+        elif person in two_genes:
+            n=2
+
+        else:
+            n=0
+        probabilities[person]["gene"][n] += p
+        probabilities[person]["trait"][person in have_trait] += p
+        #print(person in have_trait,probabilities[person]["trait"][person in have_trait])
+
     #raise NotImplementedError
 
 
@@ -168,9 +284,15 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    #raise NotImplementedError
-    
-
+    for person in probabilities:
+        for gt in probabilities[person]:
+            totalp = 0
+            for n in probabilities[person][gt]:
+                #print(person,n,probabilities[person][gt][n] )
+                totalp += probabilities[person][gt][n] 
+            ratio = 1/totalp #ratio to get sum to 1
+            for n in probabilities[person][gt]:
+                probabilities[person][gt][n] *= ratio 
 
 if __name__ == "__main__":
     main()
