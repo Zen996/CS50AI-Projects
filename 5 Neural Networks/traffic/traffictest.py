@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 import tensorflow as tf
+import csv
 
 from sklearn.model_selection import train_test_split
 
@@ -27,15 +28,30 @@ def main():
     x_train, x_test, y_train, y_test = train_test_split(
         np.array(images), np.array(labels), test_size=TEST_SIZE
     )
+    final={}
+    for num_cp_layer in range(1,4):
+        for filter_size in range(2,5):
+            for filter_num in range(10,50,10):
+                for p_size in range(2,5):
+                    for num_hidden in range(1,4):
+                        for size_hidden in range(200,500,100):
+                            for d_o in [0.3,0.5]:
+                                # Get a compiled neural network
+                                model = get_model(num_cp_layer,filter_size,filter_num,p_size,num_hidden,size_hidden,d_o)
+                                
 
-    # Get a compiled neural network
-    model = get_model()
+                                # Fit model on training data
+                                model.fit(x_train, y_train, epochs=EPOCHS)
 
-    # Fit model on training data
-    model.fit(x_train, y_train, epochs=EPOCHS)
-
-    # Evaluate neural network performance
-    model.evaluate(x_test,  y_test, verbose=2)
+                                # Evaluate neural network performance
+                                evals = model.evaluate(x_test,  y_test, verbose=2)
+                                print(evals)
+                                resultsdict = dict(zip(model.metrics_names, evals))
+                                final[(num_cp_layer,filter_size,filter_num,p_size,num_hidden,size_hidden,d_o)] = resultsdict
+    final["names"] = "num_cp_layer,filter_size,filter_num,p_size,num_hidden,size_hidden,drop_out"
+    w = csv.writer(open("output.csv", "w"))
+    for key, val in final.items():
+        w.writerow([key, val])
 
     # Save model to file
     if len(sys.argv) == 3:
@@ -80,23 +96,41 @@ def load_data(data_dir):
     raise NotImplementedError
 
 
-def get_model():
+def get_model(num_cp_layer,filter_size,filter_num,p_size,num_hidden,size_hidden,d_o):
     """
     Returns a compiled convolutional neural network model. Assume that the
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
 
-    # first layer in your network should be the same shape as your data. 
-    # For example our data is 28x28 images, and 28 layers of 28 neurons would be infeasible, 
-    # so it makes more sense to 'flatten' that 28,28 into a 784x1. 
-    # https://stackoverflow.com/questions/43237124/what-is-the-role-of-flatten-in-keras
-    #Pratima Rathore
-    #model.add(tf.keras.layers.Flatten(input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)))
+    model = tf.keras.models.Sequential()
+    for i in range(num_cp_layer):
+        model.add(tf.keras.layers.Conv2D(
+                filter_num, (filter_size, filter_size), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
+            ))
+                    # Max-pooling layer, using 2x2 pool size
+        model.add(tf.keras.layers.MaxPooling2D(pool_size=(p_size, p_size)))
+                    # Flatten units
+    model.add(tf.keras.layers.Flatten())
+    
+    for i in range(num_hidden):
+        #model.add(tf.keras.layers.Dense(size_hidden, activation="relu"))
+        model.add(tf.keras.layers.Dense(size_hidden, activation="sigmoid"))
+    model.add(tf.keras.layers.Dropout(d_o))
+    model.add(tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax"))
 
-    #lecture code
-    # Create a convolutional neural network
-    model = tf.keras.models.Sequential([
+    
+    model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+    # Return model for training and testing
+    return model
+    raise NotImplementedError
+"""
+        # Max-pooling layer, using 2x2 pool size
+        tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    [
 
         # Convolutional layer. Learn 32 filters using a 3x3 kernel
         tf.keras.layers.Conv2D(
@@ -113,19 +147,12 @@ def get_model():
         tf.keras.layers.Dense(200, activation="relu"),
         tf.keras.layers.Dense(400, activation="sigmoid"),
         tf.keras.layers.Dropout(0.3),
-
+"""
         # add output layer with 43 output units
-        tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
-    ])
+    
+    
 
 
-    model.compile(optimizer='adam',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
-
-    # Return model for training and testing
-    return model
-    raise NotImplementedError
 
 
 if __name__ == "__main__":
