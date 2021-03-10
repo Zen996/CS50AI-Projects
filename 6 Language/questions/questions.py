@@ -1,5 +1,10 @@
 import nltk
 import sys
+import string
+import re
+import collections
+import os
+import math
 
 FILE_MATCHES = 1
 SENTENCE_MATCHES = 1
@@ -48,6 +53,15 @@ def load_files(directory):
     Given a directory name, return a dictionary mapping the filename of each
     `.txt` file inside that directory to the file's contents as a string.
     """
+    filesdict = {}
+    for f in os.listdir(directory):
+        if f.endswith(".txt"):
+            #fpath = os.path.join(directory, filename)
+            with open(os.path.join(directory, f), encoding="utf8") as txtf:
+               #print(f)
+                contents = txtf.read()
+                filesdict[f] = contents
+    return filesdict
     raise NotImplementedError
 
 
@@ -59,6 +73,13 @@ def tokenize(document):
     Process document by coverting all words to lowercase, and removing any
     punctuation or English stopwords.
     """
+    tokens = nltk.word_tokenize(document.lower())
+    #return [word  for word in tokens if re.search('[a-z]', word)]
+    stopwords = nltk.corpus.stopwords.words("english")
+
+    puncts_re =  "[" + string.punctuation + "]"
+    return [word  for word in tokens if not re.search(puncts_re, word) and word not in stopwords ]
+
     raise NotImplementedError
 
 
@@ -70,6 +91,28 @@ def compute_idfs(documents):
     Any word that appears in at least one of the documents should be in the
     resulting dictionary.
     """
+
+    word_idf = {}
+    for doc in documents:
+       #print(doc)
+        wordindoc = {}
+        for word in documents[doc]:
+           #print(word)
+            if word not in wordindoc:
+                wordindoc[word]=1 #does document contain word
+
+        for word in wordindoc: #NumDocumentsContaining(word)
+            if word in word_idf:
+                word_idf[word]+=1
+            else:
+                word_idf[word]=1
+    #print(word_idf,"word idf")
+    numofdocs = len(documents)
+    for word in word_idf:
+        word_idf[word] = math.log((numofdocs / word_idf[word]))
+    #print(word_idf)
+    return word_idf
+
     raise NotImplementedError
 
 
@@ -80,6 +123,21 @@ def top_files(query, files, idfs, n):
     to their IDF values), return a list of the filenames of the the `n` top
     files that match the query, ranked according to tf-idf.
     """
+    filescores = {}
+    for f in files:
+        sum_tf=0
+        wordcount = collections.Counter(files[f])
+        for word in query:
+            if word in wordcount:
+                tf = wordcount[word] #number of times word appears in file
+                #print(idfs)
+                tfidf = tf*idfs[word]
+                sum_tf += tfidf
+        filescores[f] = sum_tf
+    sortedscores = sorted(filescores.keys(), key = lambda x:filescores[x],reverse = True)    
+    #print(sortedscores[0:n],"soreted")
+    return sortedscores[0:n]
+
     raise NotImplementedError
 
 
@@ -91,6 +149,35 @@ def top_sentences(query, sentences, idfs, n):
     the query, ranked according to idf. If there are ties, preference should
     be given to sentences that have a higher query term density.
     """
+    scores = {}
+    
+    qtdensity ={}
+    for s in sentences:
+        #sum_idf = sum((idfs[word] for word in query if word in sentences[s]))
+        qt_count = 0
+        sum_idf =0
+        for word in query:
+            if word in sentences[s]:
+                qt_count +=1
+                sum_idf += idfs[word]
+            qtdensity[s] = qt_count/len(sentences[s]) #len of list of words
+            scores[s] = sum_idf
+    #print(scores,"scores sentence")
+    sortedscores = sorted(scores.keys(), key = lambda x: (scores[x] , qtdensity[x]) ,reverse = True)    
+
+    """
+    sorting for qtdensity would be more efficient only if ties occur, but rather troublesome
+    qtdensity = {}
+    numties = 0
+    if n< len(scores): #check for ties
+    tie_idf = scores[sortedscores[n]]
+        if tie_idf == scores[sortedscores[n+1]]:
+                for doc, value in scores.items():
+                    if tie_idf == value:
+                        numties +=1
+                        """
+    #print(sortedscores[0:n],"sorted sentecnes")
+    return sortedscores[0:n]
     raise NotImplementedError
 
 

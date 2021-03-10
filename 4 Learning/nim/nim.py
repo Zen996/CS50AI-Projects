@@ -17,6 +17,8 @@ class Nim():
         self.player = 0
         self.winner = None
 
+    #class methods work for uninstantiated classes
+    #allows for "factories" or "alternative constructors" of classes
     @classmethod
     def available_actions(cls, piles):
         """
@@ -101,6 +103,13 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
+        #state is a list, cant pass directly to dict
+        tuplestate = tuple(state)
+        #print(tuplestate,action,(tuplestate,action) in self.q,"get q")
+        if (tuplestate,action) in self.q:
+            #print(self.q[tuplestate,action])
+            return self.q[tuplestate,action]
+        return 0
         raise NotImplementedError
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
@@ -118,7 +127,11 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        raise NotImplementedError
+        #print("update q",(old_q + self.alpha *(reward+future_rewards-old_q)))
+        #return (old_q + self.alpha *(reward+future_rewards-old_q))
+        #dont return but directly update instead
+        self.q[(tuple(state), action)] = (old_q + self.alpha *(reward+future_rewards-old_q))
+        #raise NotImplementedError
 
     def best_future_reward(self, state):
         """
@@ -130,6 +143,12 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
+        actions = Nim.available_actions(state)
+        if actions:
+            bestr = max((self.get_q_value(tuple(state),action) for action in actions ))
+            #print(bestr,"bestr")
+            return bestr
+        return 0
         raise NotImplementedError
 
     def choose_action(self, state, epsilon=True):
@@ -147,6 +166,21 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
+        actions = Nim.available_actions(state)
+        if epsilon:
+            if random.random()<self.epsilon:
+                return random.choice(list(actions))
+                #return list(actions)[random.randrange(0,len(list(actions))-1)]
+                #doesnt work if only one element in set
+        bestq = -999
+        for action in actions:
+            action_q =self.get_q_value(state,action) 
+
+            if bestq<action_q:
+                bestaction = action
+                bestq = action_q
+        #print(bestq,bestaction,"bestq,bestaction")
+        return bestaction
         raise NotImplementedError
 
 

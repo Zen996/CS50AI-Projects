@@ -1,5 +1,6 @@
 import nltk
 import sys
+import re 
 
 TERMINALS = """
 Adj -> "country" | "dreadful" | "enigmatical" | "little" | "moist" | "red"
@@ -14,8 +15,12 @@ V -> "arrived" | "came" | "chuckled" | "had" | "lit" | "said" | "sat"
 V -> "smiled" | "tell" | "were"
 """
 
+#read sentences\11.txt to see workings
 NONTERMINALS = """
-S -> N V
+S -> NP VP | NP VP Conj NP VP | NP VP Conj VP | NP Conj VP 
+NP -> Det N | N | Det AP N | NP P NP | P NP | NP Adv
+VP -> V | VP Adv | VP NP 
+AP -> Adj | AP Adj
 """
 
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
@@ -35,7 +40,7 @@ def main():
 
     # Convert input into list of words
     s = preprocess(s)
-
+    #print(s)        
     # Attempt to parse sentence
     try:
         trees = list(parser.parse(s))
@@ -62,6 +67,8 @@ def preprocess(sentence):
     and removing any word that does not contain at least one alphabetic
     character.
     """
+    tokens = nltk.word_tokenize(sentence.lower())
+    return [word  for word in tokens if re.search('[a-z]', word)]
     raise NotImplementedError
 
 
@@ -72,6 +79,16 @@ def np_chunk(tree):
     whose label is "NP" that does not itself contain any other
     noun phrases as subtrees.
     """
+    #label is NP but has no other NP in tree
+    chunks = []
+    #tree is a nltk.tree with label s (tree represents a sentence)
+    for subtree in tree.subtrees(filter=lambda t: t.label()=="NP"):
+        subtreestring = subtree.pformat()
+        removelabel = subtreestring[3:]
+        if "NP" not in removelabel:
+            chunks.append(subtree)
+    return chunks
+    #return a list of nltk.tree with labels NP
     raise NotImplementedError
 
 

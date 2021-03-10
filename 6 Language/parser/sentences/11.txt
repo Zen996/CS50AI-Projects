@@ -1,0 +1,69 @@
+I had a little moist red paint in the palm of my hand.
+N V Det adj adj adj n p det noun p Det n 
+		AP-> adj AP
+NP VP Det AP N P NP P NP
+      NP-> Det AP N else Det AP Det AP Det AP NP
+NP VP NP P NP P NP
+   VP -> VP NP , NP -> NP P NP
+NP VP
+
+Holmes sat. 
+N V
+NP VP
+
+Holmes lit a pipe.
+n v det n
+NP VP NP
+NP VP 
+
+We arrived the day before Thursday.
+n v det n p n
+NP VP NP P NP
+      NP -> NP P NP
+   VP -> VP NP   
+NP VP
+
+Holmes sat in the red armchair and he chuckled.
+n v p det adj n conj n v
+NP VP P Det AP NP conj NP VP
+        NP-> Det AP NP
+NP VP P NP conj NP VP
+   VP NP-> P NP
+NP VP conj NP VP
+
+My companion smiled an enigmatical smile. 
+det n v det adj n
+		NP-> Det AP NP
+NP VP 
+
+Holmes chuckled to himself.
+n v P n
+NP VP
+
+She never said a word until we were at the door here.
+n adv v det n conj n  v p det n adv 
+  NP -> NP adv        VP NP adv
+                          NP -> NP adv 
+NP VP conj NP VP
+
+
+Holmes sat down and lit his pipe.
+n v adv conj v det n
+  VP -> VP adv 
+ NP VP conj VP
+
+I had a country walk on Thursday and came home in a dreadful mess.
+n v det adj n p n conj v n p det adj n
+    NP-> Det AP NP
+NP VP NP P NP conj VP NP P NP
+NP VP conj VP
+S -> N | Det
+
+    S -> NP VP
+
+    NP -> D N | N
+    VP -> V | V NP
+
+    D -> "the" | "a"
+    N -> "she" | "city" | "car"
+    V -> "saw" | "walked"
